@@ -1,1 +1,764 @@
-<!doctype html><html><head><meta charset="utf-8"><meta content="ie=edge" http-equiv="x-ua-compatible"><title>Navigation</title><script defer="defer" src="main.js"></script></head><body><script src="https://appsforoffice.microsoft.com/lib/beta/hosted/excel.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cœur de Sucre — Dashboard Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --pri:#7C3AED; --pri2:#9F67FF; --acc:#06B6D4;
+  --bg:#F8F7FF; --card:#FFFFFF; --card2:#F3F0FF;
+  --border:#E8E0FF; --muted:#9585B4; --text:#1A0F3A;
+  --green:#10B981; --red:#EF4444; --orange:#F59E0B;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.hdr{background:white;border-bottom:1.5px solid var(--border);padding:14px 20px;
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;z-index:10;box-shadow:0 2px 20px rgba(124,58,237,0.08);}
+.hdr-left{display:flex;align-items:center;gap:12px;}
+.logo-ic{width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--pri),var(--pri2));
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 4px 12px rgba(124,58,237,0.35);}
+.hdr-name{font-size:17px;font-weight:900;color:var(--text);letter-spacing:-0.3px;}
+.hdr-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.live-b{display:flex;align-items:center;gap:5px;background:#ECFDF5;color:var(--green);
+  border:1px solid #A7F3D0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pp 1.5s infinite;}
+@keyframes pp{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync{font-size:9px;color:var(--muted);text-align:right;margin-top:3px;}
+
+/* TABS */
+.tabs{background:white;border-bottom:1.5px solid var(--border);padding:10px 16px;
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:7px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  white-space:nowrap;cursor:pointer;border:1.5px solid var(--border);
+  background:white;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.tab.active{background:var(--pri);color:white;border-color:var(--pri);}
+.tab:hover:not(.active){border-color:var(--pri);color:var(--pri);}
+
+/* PAGE */
+.page{padding:16px;display:flex;flex-direction:column;gap:14px;max-width:720px;margin:0 auto;}
+
+/* PANEL */
+.panel{display:none;flex-direction:column;gap:14px;}
+.panel.active{display:flex;}
+
+/* CARD */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+  padding:18px;box-shadow:0 2px 12px rgba(124,58,237,0.06);}
+
+/* SECTION TITLE */
+.sec-title{font-family:'DM Serif Display',serif;font-size:15px;font-weight:400;color:var(--text);margin-bottom:2px;}
+.sec-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+
+/* BADGE */
+.badge{border-radius:99px;padding:2px 10px;font-size:10px;font-weight:700;display:inline-block;border:1px solid;}
+.badge-green{background:#ECFDF518;color:var(--green);border-color:#A7F3D030;}
+.badge-red{background:#FEF2F218;color:var(--red);border-color:#FECACA30;}
+.badge-orange{background:#FFFBEB18;color:var(--orange);border-color:#FDE68A30;}
+.badge-pri{background:#F5F3FF18;color:var(--pri);border-color:#DDD6FE30;}
+.badge-muted{background:#F8F7FF;color:var(--muted);border-color:var(--border);}
+.badge-acc{background:#ECFEFF18;color:var(--acc);border-color:#A5F3FC30;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.kpi{background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+  padding:18px;box-shadow:0 2px 12px rgba(124,58,237,0.06);}
+.kpi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.kpi-val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--pri);line-height:1;margin-bottom:5px;}
+.kpi-val.green{color:var(--green);} .kpi-val.teal{color:var(--acc);} .kpi-val.purple2{color:#8B5CF6;}
+.kpi-label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.kpi-sub{font-size:10px;color:var(--muted);}
+
+/* ALERTES */
+.alert-card{background:#FFF5F5;border:1.5px solid rgba(239,68,68,0.2);border-radius:16px;padding:18px;}
+.alert-item{background:white;border-radius:10px;padding:10px 14px;margin-bottom:8px;
+  border-left:4px solid;font-size:12px;color:var(--text);font-weight:500;}
+.alert-item:last-child{margin-bottom:0;}
+.alert-item.red{border-color:var(--red);}
+.alert-item.orange{border-color:var(--orange);}
+
+/* ACTIVITE */
+.act-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.act-item:last-child{border-bottom:none;}
+.act-icon{width:38px;height:38px;border-radius:10px;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.act-title{font-size:12px;font-weight:600;color:var(--text);}
+.act-time{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* CHART */
+.chart-wrap{margin-top:8px;}
+
+/* PROJECTION SCENARIOS */
+.proj-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0;}
+.scen{border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid;}
+.scen-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+.scen-val{font-family:'DM Serif Display',serif;font-size:20px;}
+.scen.stable{border-color:var(--border);background:var(--bg);}
+.scen.stable .scen-lbl,.scen.stable .scen-val{color:var(--muted);}
+.scen.real{border-color:#DDD6FE;background:#F5F3FF;}
+.scen.real .scen-lbl,.scen.real .scen-val{color:var(--pri);}
+.scen.opt{border-color:#A7F3D0;background:#ECFDF5;}
+.scen.opt .scen-lbl,.scen.opt .scen-val{color:var(--green);}
+
+/* CONSEIL BOX */
+.conseil-box{margin-top:12px;padding:12px 14px;background:rgba(124,58,237,0.06);
+  border-left:3px solid var(--pri);border-radius:0 10px 10px 0;
+  font-size:12px;color:var(--text);line-height:1.6;}
+.conseil-box strong{color:var(--pri);}
+
+/* COMMANDES */
+.o-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border);}
+.o-row:last-child{border-bottom:none;}
+.o-name{font-size:12px;font-weight:700;color:var(--text);}
+.o-cli{font-size:10px;color:var(--muted);margin-top:1px;}
+.o-r{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.o-price{font-size:14px;font-weight:800;color:var(--pri);font-family:'DM Serif Display',serif;}
+
+/* PLANNING */
+.plan-sec-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--muted);margin:10px 0 6px;}
+.plan-sec-lbl:first-child{margin-top:0;}
+.p-row{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+.p-row:last-child{border-bottom:none;}
+.pday{font-size:9px;font-weight:800;text-transform:uppercase;color:var(--muted);
+  width:28px;flex-shrink:0;padding-top:4px;}
+.slots{display:flex;flex-wrap:wrap;gap:4px;}
+.slot{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.sb{background:#FDF2F8;color:#BE185D;border:1px solid #FBCFE8;}
+.sd{background:#ECFDF5;color:var(--green);border:1px solid #A7F3D0;}
+.sf{background:var(--bg);color:var(--muted);}
+
+/* IMPÔTS */
+.tax-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.tax-c{background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:14px;}
+.tax-c.gold{background:#FFFBEB;border-color:#FDE68A;}
+.tax-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:4px;}
+.tax-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--pri);}
+.tax-c.gold .tax-val{color:var(--orange);}
+.tax-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* FISCAL BUTTONS */
+.f-btns{display:flex;gap:8px;}
+.f-btn{flex:1;text-align:center;padding:10px;border-radius:10px;
+  font-size:11px;font-weight:700;text-decoration:none;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.fb-pri{background:var(--pri);color:white;border:none;}
+.fb-pri:hover{background:#6D28D9;}
+.fb-out{background:white;color:var(--pri);border:1.5px solid #DDD6FE;}
+.fb-out:hover{background:#F5F3FF;}
+
+/* BILAN */
+.bil-row{display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--border);}
+.bil-row:last-child{border-bottom:none;}
+.bil-l{font-size:12px;color:#6B7280;}
+.bil-v{font-size:13px;font-weight:700;}
+.bpos{color:var(--green);}.bneg{color:var(--red);}.bneu{color:var(--text);}
+.bil-total{margin-top:12px;padding:13px 16px;border-radius:14px;
+  background:#F5F3FF;border:1.5px solid #DDD6FE;
+  display:flex;justify-content:space-between;align-items:center;}
+.bt-l{font-size:12px;font-weight:700;color:var(--pri);}
+.bt-v{font-family:'DM Serif Display',serif;font-size:22px;color:var(--pri);}
+
+/* CONSEILS */
+.tip{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.tip:last-child{border-bottom:none;}
+.tip-ic{font-size:20px;flex-shrink:0;}
+.tip-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.tip-desc{font-size:11px;color:#6B7280;line-height:1.5;}
+.tip-gain{font-size:11px;font-weight:700;color:var(--green);margin-top:3px;}
+
+/* REPARTITION */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.rep-c{background:white;border-radius:12px;padding:14px;border:1.5px solid var(--border);box-shadow:0 2px 8px rgba(124,58,237,0.04);}
+.rep-lbl{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.rep-val{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px;}
+.rep-sub{font-size:10px;color:var(--muted);}
+
+/* ECHEANCES */
+.ech-item{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border);}
+.ech-item:last-child{border-bottom:none;}
+.ech-label{font-size:12px;font-weight:700;color:var(--text);}
+.ech-date{font-size:11px;color:var(--muted);}
+
+/* EMPLOYES */
+.emp-item{padding:14px 0;border-bottom:1px solid var(--border);}
+.emp-item:last-child{border-bottom:none;}
+.emp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.emp-info{display:flex;align-items:center;gap:10px;}
+.emp-avatar{width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;}
+.emp-name{font-size:13px;font-weight:700;color:var(--text);}
+.emp-post{font-size:11px;color:var(--muted);}
+.emp-meta{display:flex;gap:14px;margin-bottom:8px;font-size:11px;color:var(--muted);}
+.prog-bar{height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:99px;}
+
+/* LIVRAISONS */
+.liv-item{padding:12px 0;border-bottom:1px solid var(--border);}
+.liv-item:last-child{border-bottom:none;}
+.liv-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.liv-id{font-size:11px;color:var(--muted);}
+.liv-name{font-size:13px;font-weight:700;color:var(--text);}
+.liv-addr{font-size:11px;color:var(--muted);}
+.liv-price{font-family:'DM Serif Display',serif;font-size:18px;color:var(--pri);margin-left:12px;}
+
+/* PROGRESS */
+.p-it{margin-bottom:10px;}
+.p-it:last-child{margin-bottom:0;}
+.p-hdr{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
+.p-l{color:#374151;font-weight:600;}.p-p{color:var(--muted);}
+.p-track{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
+.p-fill{height:100%;border-radius:3px;}
+.pf-done{background:linear-gradient(90deg,var(--green),#4ADE80);}
+.pf-prog{background:linear-gradient(90deg,var(--pri),var(--pri2));}
+
+/* CONNEXIONS */
+.c-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--border);}
+.c-row:last-child{border-bottom:none;}
+.c-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.c-dot.ok{background:var(--green);} .c-dot.pa{background:var(--orange);} .c-dot.no{background:var(--red);}
+.c-name{flex:1;margin-left:9px;color:#374151;font-weight:500;font-size:12px;}
+.c-st{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+
+/* TÂCHES */
+.t-it{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
+.t-it:last-child{border-bottom:none;}
+.tck{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:9px;flex-shrink:0;font-weight:800;}
+.tck.done{background:#ECFDF5;color:var(--green);border:1.5px solid #A7F3D0;}
+.tck.pend{background:#FFFBEB;color:var(--orange);border:1.5px solid #FDE68A;}
+.t-txt{font-size:12px;font-weight:500;color:#374151;}
+.t-txt.d{color:var(--muted);text-decoration:line-through;}
+
+/* AI BUTTON */
+.ai-btn{width:100%;padding:13px;border-radius:99px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--pri),var(--pri2));
+  color:white;font-weight:900;font-size:13px;font-family:'DM Sans',sans-serif;
+  box-shadow:0 4px 20px rgba(124,58,237,0.35);transition:all 0.2s;}
+.ai-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,58,237,0.45);}
+.ai-text{background:white;border-radius:12px;padding:16px;border:1.5px solid var(--border);
+  font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;margin-bottom:12px;}
+
+.footer{text-align:center;font-size:10px;color:var(--muted);padding:4px 0;}
+
+/* WELLNESS */
+.coach-banner{background:linear-gradient(135deg,#10B981,#059669);border-radius:16px;padding:20px;
+  box-shadow:0 4px 20px rgba(16,185,129,0.3);}
+.coach-msg{background:rgba(255,255,255,0.15);border-radius:12px;padding:14px;
+  font-size:13px;color:white;line-height:1.6;margin-top:12px;}
+.habit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.habit-c{border-radius:12px;padding:14px;border:1.5px solid;}
+.prog-item{padding:10px 12px;border-radius:10px;margin-bottom:8px;border:1.5px solid;}
+
+@media(max-width:480px){
+  .tax-g,.kpi-grid,.rep-grid,.habit-grid,.proj-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="logo-ic">🎂</div>
+    <div>
+      <div class="hdr-name">Cœur de Sucre</div>
+      <div class="hdr-sub" id="hdr-date"></div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div class="live-b"><div class="live-dot"></div> LIVE</div>
+    <div class="sync">Sync Make · 2 min</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">🏠 Accueil</button>
+  <button class="tab" onclick="showTab('finances',this)">💰 Finances</button>
+  <button class="tab" onclick="showTab('compta',this)">📊 Comptabilité</button>
+  <button class="tab" onclick="showTab('labo',this)">👨‍🍳 Labo</button>
+  <button class="tab" onclick="showTab('livraisons',this)">🚚 Livraisons</button>
+  <button class="tab" onclick="showTab('commandes',this)">📦 Commandes</button>
+  <button class="tab" onclick="showTab('ia',this)">🤖 IA</button>
+  <button class="tab" onclick="showTab('bienetre',this)">🌟 Bien-être</button>
+</div>
+
+<div class="page">
+
+<!-- ══ ACCUEIL ══ -->
+<div id="panel-overview" class="panel active">
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="background:rgba(124,58,237,0.12)">💶</div>
+        <span class="badge badge-green">▲ 18%</span>
+      </div>
+      <div class="kpi-val">8 400 €</div>
+      <div class="kpi-label">CA Mai 2026</div>
+      <div class="kpi-sub">Meilleur mois</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="background:rgba(16,185,129,0.12)">✨</div>
+        <span class="badge badge-green">▲ 12%</span>
+      </div>
+      <div class="kpi-val green">5 102 €</div>
+      <div class="kpi-label">Bénéfice net</div>
+      <div class="kpi-sub">Après charges</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="background:rgba(6,182,212,0.12)">📦</div>
+        <span class="badge badge-green">▲ 8%</span>
+      </div>
+      <div class="kpi-val teal">38</div>
+      <div class="kpi-label">Commandes actives</div>
+      <div class="kpi-sub">Ce mois</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top">
+        <div class="kpi-icon" style="background:rgba(139,92,246,0.12)">👥</div>
+        <span class="badge badge-green">▲ 6%</span>
+      </div>
+      <div class="kpi-val purple2">42</div>
+      <div class="kpi-label">Clients fidèles</div>
+      <div class="kpi-sub">+6 nouveaux</div>
+    </div>
+  </div>
+
+  <div class="alert-card">
+    <div class="sec-title">🔴 Alertes urgentes</div>
+    <div class="sec-sub">À traiter maintenant</div>
+    <div class="alert-item red">⚠️ <strong style="color:#EF4444">URSSAF Mai</strong> — ~1 033€ à payer avant fin du mois</div>
+    <div class="alert-item orange">💳 <strong style="color:#F59E0B">Jean P.</strong> — Acompte 320€ en attente depuis 2 jours</div>
+    <div class="alert-item orange">💳 <strong style="color:#F59E0B">Camille R.</strong> — Paiement 95€ non reçu</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🔔 Activité récente</div>
+    <div class="sec-sub">Temps réel</div>
+    <div class="act-item"><div class="act-icon">💳</div><div><div class="act-title">Paiement reçu — Marie D. 85€</div><div class="act-time">Il y a 12 min</div></div></div>
+    <div class="act-item"><div class="act-icon">📦</div><div><div class="act-title">Nouvelle commande — Tarte citron Lucie B.</div><div class="act-time">Il y a 45 min</div></div></div>
+    <div class="act-item"><div class="act-icon">⚠️</div><div><div class="act-title">Relance envoyée — Jean P. acompte en attente</div><div class="act-time">Il y a 1h</div></div></div>
+    <div class="act-item"><div class="act-icon">✅</div><div><div class="act-title">Livraison confirmée — Sophie L. Macarons</div><div class="act-time">Il y a 2h</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📈 Historique chiffre d'affaires</div>
+    <div class="sec-sub">Données 3 ans — N−3 à aujourd'hui</div>
+    <canvas id="histoChart" height="160" class="chart-wrap"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🔮 Projection fin 2026</div>
+    <div class="sec-sub">Basée sur votre historique N−3</div>
+    <div class="proj-grid">
+      <div class="scen stable"><div class="scen-lbl">Stable</div><div class="scen-val">68k€</div></div>
+      <div class="scen real"><div class="scen-lbl">Réaliste</div><div class="scen-val">92k€</div></div>
+      <div class="scen opt"><div class="scen-lbl">Optimiste</div><div class="scen-val">124k€</div></div>
+    </div>
+    <canvas id="projChart" height="140" class="chart-wrap"></canvas>
+    <div class="conseil-box">💡 <strong>Conseil IA :</strong> Pour atteindre 92 000€, maintenez +3 commandes/semaine en juillet et août — vos mois historiquement creux.</div>
+  </div>
+</div>
+
+<!-- ══ FINANCES ══ -->
+<div id="panel-finances" class="panel">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-top"><div class="kpi-icon" style="background:#ECFDF5">📥</div><span class="badge badge-green">▲ 18%</span></div><div class="kpi-val green">8 400 €</div><div class="kpi-label">CA ce mois</div></div>
+    <div class="kpi"><div class="kpi-top"><div class="kpi-icon" style="background:#FEF2F2">📤</div></div><div class="kpi-val" style="color:#EF4444">2 100 €</div><div class="kpi-label">Charges totales</div></div>
+    <div class="kpi"><div class="kpi-top"><div class="kpi-icon" style="background:#FFFBEB">🏛️</div></div><div class="kpi-val" style="color:#F59E0B">1 250 €</div><div class="kpi-label">Cotisations</div></div>
+    <div class="kpi"><div class="kpi-top"><div class="kpi-icon" style="background:#F5F3FF">✨</div><span class="badge badge-green">▲ 12%</span></div><div class="kpi-val">5 102 €</div><div class="kpi-label">Bénéfice net</div></div>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(124,58,237,0.04),rgba(6,182,212,0.04));border-color:rgba(124,58,237,0.15)">
+    <div class="sec-title">💡 Répartition intelligente du mois</div>
+    <div class="sec-sub">Plan recommandé pour votre bénéfice de 5 102€</div>
+    <div class="rep-grid">
+      <div class="rep-c"><div class="rep-lbl">💰 Épargne</div><div class="rep-val" style="color:#10B981">1 530 €</div><div class="rep-sub">30% · Livret A / LDDS</div></div>
+      <div class="rep-c"><div class="rep-lbl">📈 Investissement</div><div class="rep-val" style="color:#7C3AED">1 020 €</div><div class="rep-sub">20% · ETF World</div></div>
+      <div class="rep-c"><div class="rep-lbl">🏦 Réserve charges</div><div class="rep-val" style="color:#F59E0B">1 020 €</div><div class="rep-sub">20% · URSSAF prochain trim.</div></div>
+      <div class="rep-c"><div class="rep-lbl">🛍️ Rémunération</div><div class="rep-val" style="color:#06B6D4">1 530 €</div><div class="rep-sub">30% · Salaire personnel</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🏛️ Détail cotisations & impôts</div>
+    <div class="sec-sub">Estimation 2026</div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--muted)">URSSAF</span><span style="font-size:13px;font-weight:700;color:var(--text)">580 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--muted)">CFE</span><span style="font-size:13px;font-weight:700;color:var(--text)">200 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--muted)">Impôts sur le revenu</span><span style="font-size:13px;font-weight:700;color:var(--text)">320 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--muted)">Autres</span><span style="font-size:13px;font-weight:700;color:var(--text)">150 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:12px 0 0"><span style="font-size:12px;font-weight:700;color:var(--pri)">Total</span><span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--pri)">1 250 €</span></div>
+  </div>
+</div>
+
+<!-- ══ COMPTABILITE ══ -->
+<div id="panel-compta" class="panel">
+  <div class="card">
+    <div class="sec-title">📈 Compte de résultat</div>
+    <div class="sec-sub">Mai 2026</div>
+    <div class="bil-row"><span class="bil-l">Chiffre d'affaires</span><span class="bil-v bpos">+ 8 400 €</span></div>
+    <div class="bil-row"><span class="bil-l">Achats matières</span><span class="bil-v bneg">− 980 €</span></div>
+    <div class="bil-row"><span class="bil-l">Emballages</span><span class="bil-v bneg">− 340 €</span></div>
+    <div class="bil-row"><span class="bil-l">Loyer labo</span><span class="bil-v bneg">− 450 €</span></div>
+    <div class="bil-row"><span class="bil-l">Transport</span><span class="bil-v bneg">− 180 €</span></div>
+    <div class="bil-row"><span class="bil-l">Matériel</span><span class="bil-v bneg">− 150 €</span></div>
+    <div class="bil-row"><span class="bil-l">URSSAF</span><span class="bil-v" style="color:#F59E0B">− 580 €</span></div>
+    <div class="bil-row"><span class="bil-l">CFE + Impôts</span><span class="bil-v" style="color:#F59E0B">− 520 €</span></div>
+    <div class="bil-row"><span class="bil-l">Taux de marge</span><span class="bil-v bneu">76%</span></div>
+    <div class="bil-total"><span class="bt-l">🎯 BÉNÉFICE NET</span><span class="bt-v">5 200 €</span></div>
+  </div>
+
+  <div class="card" style="background:#FFFBEB;border-color:rgba(245,158,11,0.25)">
+    <div class="sec-title">📅 Calendrier fiscal 2026</div>
+    <div class="sec-sub">Ne manquez aucune échéance</div>
+    <div class="ech-item"><div><div class="ech-label" style="color:#EF4444">URSSAF T2</div><div class="ech-date">📅 15 Jul</div></div><div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:16px;color:#EF4444">580 €</div><span class="badge badge-red">⚡ Urgent</span></div></div>
+    <div class="ech-item"><div><div class="ech-label">Déclaration CA</div><div class="ech-date">📅 01 Sep</div></div><div><span class="badge badge-muted">À venir</span></div></div>
+    <div class="ech-item"><div><div class="ech-label">URSSAF T3</div><div class="ech-date">📅 15 Oct</div></div><div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--pri)">580 €</div><span class="badge badge-muted">À venir</span></div></div>
+    <div class="ech-item"><div><div class="ech-label">CFE 2026</div><div class="ech-date">📅 15 Déc</div></div><div style="text-align:right"><div style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--pri)">200 €</div><span class="badge badge-muted">À venir</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">💸 Détail des charges mensuelles</div>
+    <div class="bil-row"><span class="bil-l">Matières premières</span><span class="bil-v bneg">980 €</span></div>
+    <div class="bil-row"><span class="bil-l">Emballages</span><span class="bil-v bneg">340 €</span></div>
+    <div class="bil-row"><span class="bil-l">Loyer labo</span><span class="bil-v bneg">450 €</span></div>
+    <div class="bil-row"><span class="bil-l">Transport</span><span class="bil-v bneg">180 €</span></div>
+    <div class="bil-row"><span class="bil-l">Matériel</span><span class="bil-v bneg">150 €</span></div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0 0;border-top:1.5px solid var(--border)"><span style="font-size:12px;font-weight:700;color:#EF4444">Total charges</span><span style="font-family:'DM Serif Display',serif;font-size:18px;color:#EF4444">2 100 €</span></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🏛️ Obligations fiscales & sociales</div>
+    <div class="sec-sub">Liens directs</div>
+    <div style="background:#F9FAFB;border:1.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🏢</span><div><div style="font-size:13px;font-weight:700">URSSAF</div><div style="font-size:10px;color:var(--muted)">Cotisations sociales mensuelles</div></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Montant : <strong style="color:var(--text)">~1 033,20 €</strong> · Fin de mois</div>
+      <a href="https://www.urssaf.fr" target="_blank" class="f-btn fb-pri">Déclarer & Payer — Urssaf.fr</a>
+    </div>
+    <div style="background:#F9FAFB;border:1.5px solid var(--border);border-radius:14px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:18px">🏦</span><div><div style="font-size:13px;font-weight:700">CFE</div><div style="font-size:10px;color:var(--muted)">Cotisation Foncière des Entreprises</div></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Déclaration : <strong style="color:var(--text)">Avant 31 déc</strong> · Paiement : <strong style="color:var(--text)">Avant 15 déc</strong></div>
+      <a href="https://www.impots.gouv.fr" target="_blank" class="f-btn fb-out" style="display:block;text-align:center">Espace Pro — Impots.gouv.fr</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LABO ══ -->
+<div id="panel-labo" class="panel">
+  <div class="card" style="background:rgba(16,185,129,0.04);border-color:rgba(16,185,129,0.2)">
+    <div class="sec-title">👨‍🍳 Suivi équipe aujourd'hui</div>
+    <div class="sec-sub">Mis à jour en temps réel</div>
+    <div class="emp-item">
+      <div class="emp-top"><div class="emp-info"><div class="emp-avatar" style="background:rgba(245,158,11,0.12)">👨‍🍳</div><div><div class="emp-name">Thomas R.</div><div class="emp-post">Pâtissier chef</div></div></div><span class="badge badge-acc">En cours</span></div>
+      <div class="emp-meta"><span>🕐 <strong style="color:var(--text)">07:32</strong></span><span>🚪 <strong style="color:var(--text)">—</strong></span><span>✅ <strong style="color:var(--acc)">2/3</strong></span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:67%;background:var(--acc)"></div></div>
+    </div>
+    <div class="emp-item">
+      <div class="emp-top"><div class="emp-info"><div class="emp-avatar" style="background:rgba(16,185,129,0.12)">👩‍🎨</div><div><div class="emp-name">Léa M.</div><div class="emp-post">Décoratrice</div></div></div><span class="badge badge-green">Terminé</span></div>
+      <div class="emp-meta"><span>🕐 <strong style="color:var(--text)">08:15</strong></span><span>🚪 <strong style="color:var(--text)">—</strong></span><span>✅ <strong style="color:var(--green)">4/4</strong></span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div>
+    </div>
+    <div class="emp-item">
+      <div class="emp-top"><div class="emp-info"><div class="emp-avatar" style="background:rgba(148,163,184,0.12)">🚚</div><div><div class="emp-name">Kevin D.</div><div class="emp-post">Livreur</div></div></div><span class="badge badge-muted">Parti</span></div>
+      <div class="emp-meta"><span>🕐 <strong style="color:var(--text)">09:00</strong></span><span>🚪 <strong style="color:var(--text)">14:30</strong></span><span>✅ <strong style="color:var(--green)">5/5</strong></span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📋 Planning production</div>
+    <div class="sec-sub">Commandes à préparer aujourd'hui</div>
+    <div class="o-row"><div><div class="o-name">Wedding Cake 5 étages</div><div class="o-cli">CMD-042 · Marie Dupont · 02/06</div></div><span class="badge badge-orange">En production</span></div>
+    <div class="o-row"><div><div class="o-name">Anniversaire Peppa Pig</div><div class="o-cli">CMD-043 · Sophie Martin · 03/06</div></div><span class="badge badge-green">Confirmée</span></div>
+    <div class="o-row"><div><div class="o-name">Naked Cake Champêtre</div><div class="o-cli">CMD-044 · Jean Koszuk · 05/06</div></div><span class="badge badge-pri">Payée</span></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📅 Planning pâtissier & livraisons</div>
+    <div class="plan-sec-lbl">🧑‍🍳 Pâtissier</div>
+    <div class="p-row"><span class="pday">Lun</span><div class="slots"><span class="slot sb">Macarons x48</span><span class="slot sb">Entremet</span></div></div>
+    <div class="p-row"><span class="pday">Mar</span><div class="slots"><span class="slot sf">Libre</span></div></div>
+    <div class="p-row"><span class="pday">Mer</span><div class="slots"><span class="slot sb">Wedding cake</span><span class="slot sb">Tarte anniv.</span></div></div>
+    <div class="p-row"><span class="pday">Jeu</span><div class="slots"><span class="slot sb">Bûche</span></div></div>
+    <div class="p-row"><span class="pday">Ven</span><div class="slots"><span class="slot sb">Finitions</span></div></div>
+    <div class="plan-sec-lbl">🚚 Livraisons</div>
+    <div class="p-row"><span class="pday">Mer</span><div class="slots"><span class="slot sd">Macarons – Marie</span></div></div>
+    <div class="p-row"><span class="pday">Jeu</span><div class="slots"><span class="slot sd">Entremet – Sophie</span></div></div>
+    <div class="p-row"><span class="pday">Sam</span><div class="slots"><span class="slot sd">Wedding – Jean</span><span class="slot sd">Tarte – Pierre</span></div></div>
+  </div>
+</div>
+
+<!-- ══ LIVRAISONS ══ -->
+<div id="panel-livraisons" class="panel">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:26px;margin-bottom:6px">🚚</div><div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--pri)">3</div><div style="font-size:10px;color:var(--muted);margin-top:4px">Du jour</div></div>
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:26px;margin-bottom:6px">✅</div><div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--green)">1</div><div style="font-size:10px;color:var(--muted);margin-top:4px">Livrées</div></div>
+    <div class="card" style="text-align:center;padding:16px"><div style="font-size:26px;margin-bottom:6px">⏳</div><div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--orange)">2</div><div style="font-size:10px;color:var(--muted);margin-top:4px">En attente</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🗺️ Tournée du jour</div>
+    <div class="sec-sub">Planning livreur — Aujourd'hui</div>
+    <div class="liv-item">
+      <div class="liv-top">
+        <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="liv-id">LIV-018</span><span class="badge badge-pri">Planifiée</span></div><div class="liv-name">Marie Dupont</div><div class="liv-addr">📍 12 rue des Fleurs, Nord</div><div class="liv-addr">🕐 10:00</div></div>
+        <div class="liv-price">650€</div>
+      </div>
+    </div>
+    <div class="liv-item">
+      <div class="liv-top">
+        <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="liv-id">LIV-019</span><span class="badge badge-acc">En route</span></div><div class="liv-name">Jean Koszuk</div><div class="liv-addr">📍 58 av. des Acacias, Est</div><div class="liv-addr">🕐 14:30</div></div>
+        <div class="liv-price">320€</div>
+      </div>
+    </div>
+    <div class="liv-item">
+      <div class="liv-top">
+        <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="liv-id">LIV-020</span><span class="badge badge-pri">Planifiée</span></div><div class="liv-name">Aurelie A.</div><div class="liv-addr">📍 3 impasse du Moulin, Centre</div><div class="liv-addr">🕐 16:00</div></div>
+        <div class="liv-price">280€</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMMANDES ══ -->
+<div id="panel-commandes" class="panel">
+  <div class="card">
+    <div class="sec-title">📦 Commandes actives</div>
+    <div class="sec-sub">Semaine en cours</div>
+    <div class="o-row"><div><div class="o-name">Wedding Cake 5 étages</div><div class="o-cli">CMD-042 · Marie Dupont · 02/06 · Nord</div></div><div class="o-r"><span class="o-price">650€</span><span class="badge badge-orange">En production</span></div></div>
+    <div class="o-row"><div><div class="o-name">Anniversaire Peppa Pig</div><div class="o-cli">CMD-043 · Sophie Martin · 03/06 · Sud</div></div><div class="o-r"><span class="o-price">180€</span><span class="badge badge-green">Confirmée</span></div></div>
+    <div class="o-row"><div><div class="o-name">Naked Cake Champêtre</div><div class="o-cli">CMD-044 · Jean Koszuk · 05/06 · Est</div></div><div class="o-r"><span class="o-price">320€</span><span class="badge badge-pri">Payée</span></div></div>
+    <div class="o-row"><div><div class="o-name">Cupcakes x24 Licorne</div><div class="o-cli">CMD-045 · Yasmine N. · 07/06 · Ouest</div></div><div class="o-r"><span class="o-price">140€</span><span class="badge badge-muted">En attente</span></div></div>
+    <div class="o-row"><div><div class="o-name">Gâteau Bébé Shower</div><div class="o-cli">CMD-046 · Aurelie A. · 08/06 · Centre</div></div><div class="o-r"><span class="o-price">280€</span><span class="badge badge-green">Confirmée</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📊 Commandes par jour</div>
+    <canvas id="cmdsChart" height="140" class="chart-wrap"></canvas>
+  </div>
+</div>
+
+<!-- ══ IA ══ -->
+<div id="panel-ia" class="panel">
+  <div class="card" style="background:linear-gradient(135deg,rgba(124,58,237,0.04),rgba(6,182,212,0.04));border-color:rgba(124,58,237,0.2)">
+    <div class="sec-title">🤖 Conseils financiers personnalisés</div>
+    <div class="sec-sub">Analyse Claude basée sur vos données réelles</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:white;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--border)"><div style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,0.12);display:flex;align-items:center;justify-content:center;font-size:18px">💶</div><div><div style="font-size:10px;color:var(--muted)">CA Mai</div><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--pri)">8 400 €</div></div></div>
+      <div style="background:white;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--border)"><div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,0.12);display:flex;align-items:center;justify-content:center;font-size:18px">✨</div><div><div style="font-size:10px;color:var(--muted)">Bénéfice</div><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--green)">5 102 €</div></div></div>
+      <div style="background:white;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--border)"><div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,0.12);display:flex;align-items:center;justify-content:center;font-size:18px">📈</div><div><div style="font-size:10px;color:var(--muted)">Tendance</div><div style="font-family:'DM Serif Display',serif;font-size:15px;color:var(--acc)">+15%/an</div></div></div>
+      <div style="background:white;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--border)"><div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div><div><div style="font-size:10px;color:var(--muted)">Objectif 2026</div><div style="font-family:'DM Serif Display',serif;font-size:15px;color:#8B5CF6">92k€</div></div></div>
+    </div>
+    <div id="ai-empty" style="text-align:center;padding:20px 0">
+      <div style="font-size:44px;margin-bottom:12px">✨</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Claude analyse vos données et vous donne<br>des conseils financiers ultra personnalisés</p>
+      <button class="ai-btn" onclick="fetchAI()">🎯 Analyser mes finances</button>
+    </div>
+    <div id="ai-loading" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:30px;margin-bottom:10px">⚙️</div>
+      <p style="font-size:12px;color:var(--muted)">Claude analyse vos données...</p>
+    </div>
+    <div id="ai-result" style="display:none">
+      <div class="ai-text" id="ai-text-content"></div>
+      <button class="ai-btn" onclick="fetchAI()">🔄 Actualiser les conseils</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">💡 Conseils rapides</div>
+    <div style="padding:10px 14px;background:rgba(16,185,129,0.06);border-radius:10px;border-left:3px solid var(--green);margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.5"><span style="font-size:16px;margin-right:8px">💰</span>Mettez 1 530€ sur votre Livret A avant le 5 du mois</div>
+    <div style="padding:10px 14px;background:rgba(124,58,237,0.06);border-radius:10px;border-left:3px solid var(--pri);margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.5"><span style="font-size:16px;margin-right:8px">📈</span>Un ETF MSCI World à 150€/mois peut rapporter 28 000€ dans 10 ans</div>
+    <div style="padding:10px 14px;background:rgba(245,158,11,0.06);border-radius:10px;border-left:3px solid var(--orange);margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.5"><span style="font-size:16px;margin-right:8px">🎯</span>Décembre est votre pic — préparez +20% de stocks dès octobre</div>
+    <div style="padding:10px 14px;background:rgba(6,182,212,0.06);border-radius:10px;border-left:3px solid var(--acc);font-size:12px;color:var(--text);line-height:1.5"><span style="font-size:16px;margin-right:8px">⚡</span>Ajoutez "Livraison express +24h" à +30% — vos clients weekend l'adorent</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">💡 Optimisation fiscale</div>
+    <div class="tip"><span class="tip-ic">📦</span><div><div class="tip-title">Matières premières déductibles</div><div class="tip-desc">Farine, beurre, emballages — conservez toutes vos factures.</div><div class="tip-gain">↑ Économie ~800€ / an</div></div></div>
+    <div class="tip"><span class="tip-ic">🚗</span><div><div class="tip-title">Frais kilométriques livraisons</div><div class="tip-desc">Déduisez vos trajets au barème fiscal 2026.</div><div class="tip-gain">↑ Économie ~400€ / an</div></div></div>
+    <div class="tip"><span class="tip-ic">📱</span><div><div class="tip-title">Outils numériques pro</div><div class="tip-desc">Make, Claude API — déductibles à 100%.</div><div class="tip-gain">↑ Économie ~300€ / an</div></div></div>
+    <div class="tip"><span class="tip-ic">🏪</span><div><div class="tip-title">Passage SASU/EURL</div><div class="tip-desc">À envisager dès 50 000€ de CA annuel.</div><div class="tip-gain">↑ Seuil à surveiller : 50 000€</div></div></div>
+  </div>
+</div>
+
+<!-- ══ BIEN-ETRE ══ -->
+<div id="panel-bienetre" class="panel">
+  <div class="coach-banner">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px">🌟</div>
+      <div><div style="font-weight:900;font-size:15px;color:white">Votre coach bien-être</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">Message du jour</div></div>
+    </div>
+    <div class="coach-msg">💪 <strong>Bonjour !</strong> Vous avez travaillé 6 jours d'affilée — votre corps a besoin de récupérer. Aujourd'hui : 20 min de marche + 10 min de méditation avant 18h. Votre CA ce mois est excellent, vous méritez de prendre soin de vous !</div>
+  </div>
+
+  <div class="card" style="background:#FFF5F5;border-color:rgba(239,68,68,0.15)">
+    <div class="sec-title">⚡ Alertes bien-être</div>
+    <div class="sec-sub">Basées sur votre activité</div>
+    <div style="padding:10px 14px;background:rgba(239,68,68,0.06);border-radius:10px;border-left:3px solid #EF4444;margin-bottom:8px;font-size:12px;color:var(--text);display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px;flex-shrink:0">⚡</span><div><span style="background:rgba(239,68,68,0.12);color:#EF4444;border-radius:99px;padding:1px 8px;font-size:10px;font-weight:700;margin-right:6px">URGENT</span>Vous travaillez depuis 6 jours sans pause — prenez une demi-journée demain</div></div>
+    <div style="padding:10px 14px;background:rgba(6,182,212,0.06);border-radius:10px;border-left:3px solid var(--acc);margin-bottom:8px;font-size:12px;color:var(--text);display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px">💧</span>Vous n'avez bu que 5 verres aujourd'hui — objectif 8 verres</div>
+    <div style="padding:10px 14px;background:rgba(124,58,237,0.06);border-radius:10px;border-left:3px solid var(--pri);margin-bottom:8px;font-size:12px;color:var(--text);display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px">😴</span>Couchez-vous avant 22h ce soir pour récupérer vos 8h de sommeil</div>
+    <div style="padding:10px 14px;background:rgba(16,185,129,0.06);border-radius:10px;border-left:3px solid var(--green);font-size:12px;color:var(--text);display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px">🏃</span>Il est 14h — parfait pour une pause sport de 20 minutes !</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📊 Habitudes du jour</div>
+    <div class="sec-sub">Suivi en temps réel</div>
+    <div class="habit-grid">
+      <div class="habit-c" style="background:rgba(6,182,212,0.06);border-color:rgba(6,182,212,0.2)"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:20px">💧</span><span style="font-size:11px;font-weight:700;color:var(--acc)">63%</span></div><div style="font-size:12px;font-weight:700;margin-bottom:2px">Hydratation</div><div style="font-size:10px;color:var(--muted);margin-bottom:8px">5 / 8 verres</div><div class="prog-bar"><div class="prog-fill" style="width:63%;background:var(--acc)"></div></div></div>
+      <div class="habit-c" style="background:rgba(124,58,237,0.06);border-color:rgba(124,58,237,0.2)"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:20px">😴</span><span style="font-size:11px;font-weight:700;color:var(--pri)">81%</span></div><div style="font-size:12px;font-weight:700;margin-bottom:2px">Sommeil</div><div style="font-size:10px;color:var(--muted);margin-bottom:8px">6.5 / 8h</div><div class="prog-bar"><div class="prog-fill" style="width:81%;background:var(--pri)"></div></div></div>
+      <div class="habit-c" style="background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.2)"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:20px">🏃</span><span style="font-size:11px;font-weight:700;color:var(--green)">60%</span></div><div style="font-size:12px;font-weight:700;margin-bottom:2px">Sport</div><div style="font-size:10px;color:var(--muted);margin-bottom:8px">3 / 5j/sem</div><div class="prog-bar"><div class="prog-fill" style="width:60%;background:var(--green)"></div></div></div>
+      <div class="habit-c" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2)"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:20px">🧘</span><span style="font-size:11px;font-weight:700;color:var(--orange)">70%</span></div><div style="font-size:12px;font-weight:700;margin-bottom:2px">Méditation</div><div style="font-size:10px;color:var(--muted);margin-bottom:8px">7 / 10 min</div><div class="prog-bar"><div class="prog-fill" style="width:70%;background:var(--orange)"></div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📅 Programme de la semaine</div>
+    <div class="sec-sub">Validez votre programme pour cette semaine</div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:rgba(148,163,184,0.06);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--muted);margin-bottom:3px">Lundi ✅ Fait</div><div style="font-size:11px;color:#6B7280">🏃 Course 20 min · 🧘 Méditation 10 min</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:rgba(148,163,184,0.06);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--muted);margin-bottom:3px">Mardi ✅ Fait</div><div style="font-size:11px;color:#6B7280">💪 Musculation 30 min · 🧘 Méditation 10 min</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:rgba(16,185,129,0.08);border:1.5px solid var(--green)"><div style="font-size:12px;font-weight:900;color:var(--green);margin-bottom:3px">Mercredi 📍 Aujourd'hui</div><div style="font-size:11px;color:#6B7280">🚶 Marche 30 min · 🧘 Respiration 5 min</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:3px">Jeudi ⏳ À venir</div><div style="font-size:11px;color:#6B7280">🏃 Course 20 min · 🧘 Méditation 10 min</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:3px">Vendredi ⏳ À venir</div><div style="font-size:11px;color:#6B7280">🧘 Yoga 30 min · 🧘 Méditation 15 min</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:var(--bg);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:3px">Samedi ⏳ À venir</div><div style="font-size:11px;color:#6B7280">🚴 Vélo 45 min · 🌿 Promenade nature</div></div>
+    <div style="padding:10px 12px;border-radius:10px;margin-bottom:12px;background:var(--bg);border:1.5px solid var(--border)"><div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:3px">Dimanche ⏳ À venir</div><div style="font-size:11px;color:#6B7280">😴 Repos total · 📖 Lecture / famille</div></div>
+    <button onclick="this.textContent='✅ Programme accepté !';this.style.background='var(--green)';this.style.boxShadow='0 4px 16px rgba(16,185,129,0.4)'" style="width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#10B981,#059669);color:white;font-weight:900;font-size:13px;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(16,185,129,0.4)">✅ Accepter ce programme</button>
+  </div>
+</div>
+
+<!-- AVANCEMENT + CONNEXIONS + TÂCHES (commun) -->
+<div id="panel-suivi" class="panel">
+  <div class="card">
+    <div class="sec-title">🚀 Avancement projet</div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">Forms → Sheets</span><span class="p-p">100%</span></div><div class="p-track"><div class="p-fill pf-done" style="width:100%"></div></div></div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">Planning automatique</span><span class="p-p">100%</span></div><div class="p-track"><div class="p-fill pf-done" style="width:100%"></div></div></div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">SumUp paiements</span><span class="p-p">60%</span></div><div class="p-track"><div class="p-fill pf-prog" style="width:60%"></div></div></div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">Dashboard Vercel</span><span class="p-p">80%</span></div><div class="p-track"><div class="p-fill pf-prog" style="width:80%"></div></div></div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">Manychat IA</span><span class="p-p">0%</span></div><div class="p-track"><div class="p-fill pf-prog" style="width:0%"></div></div></div>
+    <div class="p-it"><div class="p-hdr"><span class="p-l">Site web</span><span class="p-p">0%</span></div><div class="p-track"><div class="p-fill pf-prog" style="width:0%"></div></div></div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🔌 Connexions</div>
+    <div class="c-row"><div class="c-dot ok"></div><span class="c-name">Google Forms</span><span class="c-st">Actif</span></div>
+    <div class="c-row"><div class="c-dot ok"></div><span class="c-name">Google Sheets</span><span class="c-st">Actif</span></div>
+    <div class="c-row"><div class="c-dot ok"></div><span class="c-name">Google Calendar</span><span class="c-st">Actif</span></div>
+    <div class="c-row"><div class="c-dot pa"></div><span class="c-name">SumUp</span><span class="c-st">Partiel</span></div>
+    <div class="c-row"><div class="c-dot pa"></div><span class="c-name">Facebook App</span><span class="c-st">Créée</span></div>
+    <div class="c-row"><div class="c-dot no"></div><span class="c-name">Manychat</span><span class="c-st">À faire</span></div>
+    <div class="c-row"><div class="c-dot no"></div><span class="c-name">Revolut</span><span class="c-st">À faire</span></div>
+    <div class="c-row"><div class="c-dot no"></div><span class="c-name">Site web</span><span class="c-st">À faire</span></div>
+  </div>
+  <div class="card">
+    <div class="sec-title">✅ Tâches</div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">Forms → Sheets connecté</span></div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">Calendar automatique</span></div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">Planning Pâtissier & Livreur</span></div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">Filtre anti-doublons</span></div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">Clé Claude API créée</span></div>
+    <div class="t-it"><div class="tck done">✓</div><span class="t-txt d">App Facebook créée</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Montant réel → SumUp</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Manychat IA Messenger</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Dashboard Vercel en ligne</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Lien paiement automatique</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Relance 48h avant livraison</span></div>
+    <div class="t-it"><div class="tck pend">○</div><span class="t-txt">Publications réseaux sociaux auto</span></div>
+  </div>
+</div>
+
+<div class="footer">Cœur de Sucre Dashboard · Sync automatique Make & SumUp · <span id="ft-time"></span></div>
+</div>
+
+<script>
+// DATE
+const d=new Date();
+document.getElementById('hdr-date').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · '+d.toLocaleTimeString('fr-FR');
+document.getElementById('ft-time').textContent=d.toLocaleTimeString('fr-FR');
+
+// TABS
+function showTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// CHARTS - Histo CA
+const hL=['Jun 23','Sep 23','Déc 23','Mar 24','Jun 24','Sep 24','Déc 24','Mar 25','Jun 25'];
+const hD=[2800,3200,5900,3700,5100,4600,7200,4500,7400];
+new Chart(document.getElementById('histoChart'),{
+  type:'line',
+  data:{labels:hL,datasets:[{data:hD,borderColor:'#7C3AED',
+    backgroundColor:function(ctx){const g=ctx.chart.ctx.createLinearGradient(0,0,0,180);g.addColorStop(0,'rgba(124,58,237,0.22)');g.addColorStop(1,'rgba(124,58,237,0.0)');return g;},
+    borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#7C3AED',
+    pointBorderColor:'white',pointBorderWidth:2,tension:0.4,fill:true}]},
+  options:{responsive:true,plugins:{legend:{display:false},
+    tooltip:{backgroundColor:'white',borderColor:'#E8E0FF',borderWidth:1.5,titleColor:'#9585B4',bodyColor:'#7C3AED',bodyFont:{size:14,weight:'bold'},callbacks:{label:c=>'CA: '+c.parsed.y.toLocaleString('fr-FR')+'€'}}},
+    scales:{y:{grid:{color:'#F3F0FF'},ticks:{callback:v=>(v/1000)+'k€',color:'#9585B4',font:{size:10}}},
+      x:{grid:{display:false},ticks:{color:'#9585B4',font:{size:10},maxRotation:0}}}}
+});
+
+// CHARTS - Projection
+const pL=['Jul','Aoû','Sep','Oct','Nov','Déc'];
+new Chart(document.getElementById('projChart'),{
+  type:'line',
+  data:{labels:pL,datasets:[
+    {label:'Stable',data:[6800,6500,7200,7800,8100,9500],borderColor:'rgba(149,133,180,0.5)',borderDash:[5,4],borderWidth:2,pointRadius:3,pointBackgroundColor:'rgba(149,133,180,0.5)',tension:0.4,fill:false},
+    {label:'Réaliste',data:[7800,8200,8800,9500,10200,12000],borderColor:'#7C3AED',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#7C3AED',pointBorderColor:'white',pointBorderWidth:2,tension:0.4,fill:false},
+    {label:'Optimiste',data:[9200,10100,11200,12400,13800,16000],borderColor:'#10B981',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#10B981',pointBorderColor:'white',pointBorderWidth:2,tension:0.4,fill:false}
+  ]},
+  options:{responsive:true,
+    plugins:{legend:{labels:{color:'#9585B4',font:{size:11},boxWidth:12,usePointStyle:true,pointStyle:'circle'}},
+      tooltip:{backgroundColor:'white',borderColor:'#E8E0FF',borderWidth:1.5,titleColor:'#9585B4',bodyColor:'#1A0F3A',callbacks:{label:c=>c.dataset.label+' : '+c.parsed.y.toLocaleString('fr-FR')+'€'}}},
+    scales:{y:{grid:{color:'#F3F0FF'},ticks:{callback:v=>(v/1000).toFixed(0)+'k€',color:'#9585B4',font:{size:10}}},
+      x:{grid:{display:false},ticks:{color:'#9585B4',font:{size:10}}}}}
+});
+
+// CHARTS - Commandes
+new Chart(document.getElementById('cmdsChart'),{
+  type:'bar',
+  data:{labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'],
+    datasets:[{data:[4,7,5,9,12,15,8],backgroundColor:'rgba(124,58,237,0.75)',borderRadius:6,borderSkipped:false}]},
+  options:{responsive:true,plugins:{legend:{display:false},
+    tooltip:{backgroundColor:'white',borderColor:'#E8E0FF',borderWidth:1.5,bodyColor:'#7C3AED',bodyFont:{weight:'bold'},callbacks:{label:c=>c.parsed.y+' commandes'}}},
+    scales:{y:{grid:{color:'#F3F0FF'},ticks:{color:'#9585B4',font:{size:10}}},
+      x:{grid:{display:false},ticks:{color:'#9585B4',font:{size:11,weight:'600'}}}}}
+});
+
+// AI FETCH
+async function fetchAI(){
+  document.getElementById('ai-empty').style.display='none';
+  document.getElementById('ai-result').style.display='none';
+  document.getElementById('ai-loading').style.display='block';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,
+        messages:[{role:'user',content:`Tu es un conseiller financier expert micro-entrepreneur français. Données Cœur de Sucre mai 2026 : CA 8400€ | Dépenses 2100€ | Cotisations 1250€ | Bénéfice net 5102€. Historique 3 ans : tendance +15%/an | Pic décembre | Creux juillet-août. Donne 4 conseils ultra concrets et chiffrés : répartition bénéfice, investissements, optimisation charges, action pour booster CA. Direct, chiffré, motivant. Emojis. Français.`}]})
+    });
+    const data=await res.json();
+    document.getElementById('ai-loading').style.display='none';
+    document.getElementById('ai-text-content').textContent=data.content[0].text;
+    document.getElementById('ai-result').style.display='block';
+  }catch(e){
+    document.getElementById('ai-loading').style.display='none';
+    document.getElementById('ai-text-content').textContent='❌ Erreur de connexion. Vérifiez votre API key.';
+    document.getElementById('ai-result').style.display='block';
+  }
+}
+</script>
+</body>
+</html>
