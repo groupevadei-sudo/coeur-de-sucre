@@ -189,6 +189,37 @@ const conseilsWellness = [
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [tab,setTab] = useState("overview");
+  const [newCommandes, setNewCommandes] = useState([]);
+  const [loadingCommandes, setLoadingCommandes] = useState(true);
+
+  const MAKE_WEBHOOK = "https://hook.eu1.make.com/wl2pl4yij2y3fc8fzsfstr3m86gnjwe5";
+
+  useEffect(() => {
+    const fetchCommandes = async () => {
+      try {
+        const res = await fetch(MAKE_WEBHOOK);
+        const data = await res.json();
+        if (data && Array.isArray(data)) {
+          const parsed = data.map((row, i) => ({
+            id: `CMD-${String(5500 + i).padStart(4,'0')}`,
+            client: row['1'] || row['NOM & PRÉNOM :'] || 'Client',
+            gateau: row['14'] || row['Thème du gâteau'] || 'Gâteau',
+            date: row['5'] || row['DATE DE LIVRAISON :'] || '',
+            zone: row['4'] ? row['4'].split(',').pop()?.trim() : 'N/A',
+            parts: row['12'] || '',
+            statut: 'Nouvelle',
+          })).filter(c => c.date);
+          setNewCommandes(parsed);
+        }
+      } catch (e) {
+        console.log('Make webhook error:', e);
+      }
+      setLoadingCommandes(false);
+    };
+    fetchCommandes();
+    const interval = setInterval(fetchCommandes, 60000);
+    return () => clearInterval(interval);
+  }, []);
   const [time,setTime] = useState(new Date());
   const [aiLoading,setAiLoading] = useState(false);
   const [aiText,setAiText] = useState("");
@@ -300,6 +331,27 @@ Sois motivant, bienveillant, concret et réaliste. Propose des séances courtes 
                 💳 <strong style={{color:ORANGE}}>Yasmine N.</strong> — Acompte 70€ en attente depuis 3 jours
               </div>
             </div>
+          </div>
+
+          {/* Nouvelles commandes Make */}
+          <div style={card()}>
+            <Sec sub="Données en temps réel depuis vos formulaires">📋 Nouvelles commandes reçues</Sec>
+            {loadingCommandes ? (
+              <div style={{textAlign:"center",padding:"20px",fontFamily:"sans-serif",fontSize:12,color:MUTED}}>⏳ Chargement...</div>
+            ) : newCommandes.length === 0 ? (
+              <div style={{textAlign:"center",padding:"20px",fontFamily:"sans-serif",fontSize:12,color:MUTED}}>Aucune nouvelle commande pour l'instant</div>
+            ) : (
+              newCommandes.slice(0,5).map((c,i) => (
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"10px 0",borderBottom:i<newCommandes.length-1?`1px solid ${BORDER}`:"none"}}>
+                  <div>
+                    <div style={{fontFamily:"sans-serif",fontSize:13,fontWeight:700,color:TEXT}}>{c.client}</div>
+                    <div style={{fontFamily:"sans-serif",fontSize:11,color:MUTED}}>{c.gateau}</div>
+                    <div style={{fontFamily:"sans-serif",fontSize:11,color:MUTED}}>📅 {c.date} · 📍 {c.zone} · {c.parts} parts</div>
+                  </div>
+                  <span style={{...badge(PRI,10),marginLeft:8}}>Nouveau</span>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Notifs */}
